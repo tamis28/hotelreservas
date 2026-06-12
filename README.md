@@ -17,7 +17,7 @@ Para solucionar esse problema, será desenvolvido um sistema web capaz de cadast
 
 # Protótipo da Interface
 
-![Protótipo da Interface](assets/Captura de tela 2026-06-12 120955.png)
+![Protótipo da Interface](./assets/Captura de tela 2026-06-12 120955.png)
 
 ---
 
