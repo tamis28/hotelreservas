@@ -1,12 +1,6 @@
-let quartos = JSON.parse(localStorage.getItem("quartos")) || [];
-let reservas = JSON.parse(localStorage.getItem("reservas")) || [];
+const API = "http://localhost:3000";
 
-function salvarStorage() {
-    localStorage.setItem("quartos", JSON.stringify(quartos));
-    localStorage.setItem("reservas", JSON.stringify(reservas));
-}
-
-function abrirModalQuarto() {
+async function abrirModalQuarto() {
     document.getElementById("modalQuarto").style.display = "flex";
 }
 
@@ -14,156 +8,128 @@ function fecharModalQuarto() {
     document.getElementById("modalQuarto").style.display = "none";
 }
 
-function salvarQuarto() {
+async function salvarQuarto() {
+    const numero = document.getElementById("numeroQuarto").value;
+    const tipo = document.getElementById("tipoQuarto").value;
 
-    const numero =
-        document.getElementById("numeroQuarto").value;
-
-    const tipo =
-        document.getElementById("tipoQuarto").value;
-
-    quartos.push({
-        id: Date.now(),
-        numero,
-        tipo
+    await fetch(`${API}/quartos/cadastrar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ numero, tipo })
     });
 
-    salvarStorage();
     fecharModalQuarto();
     listarQuartos();
 }
 
-function listarQuartos() {
-
-    const tabela =
-        document.getElementById("listaQuartos");
-
+async function listarQuartos() {
+    const tabela = document.getElementById("listaQuartos");
     if (!tabela) return;
+
+    const res = await fetch(`${API}/quartos/listar`);
+    const quartos = await res.json();
 
     tabela.innerHTML = "";
 
     quartos.forEach(q => {
-
         tabela.innerHTML += `
         <tr>
-
             <td>${q.id}</td>
             <td>${q.numero}</td>
             <td>${q.tipo}</td>
-
             <td>
-                <button onclick="verReservas(${q.id})">
-                    Ver Reservas
-                </button>
-
-                <button class="danger"
-                onclick="excluirQuarto(${q.id})">
-                    Excluir
-                </button>
+                <button onclick="verReservas(${q.id}, '${q.numero}')">Ver Reservas</button>
+                <button class="danger" onclick="excluirQuarto(${q.id})">Excluir</button>
             </td>
-        </tr>
-        `;
+        </tr>`;
     });
 }
 
-function excluirQuarto(id) {
-    if(confirm("Deseja excluir este quarto?")) {
-        quartos =
-            quartos.filter(q => q.id !== id);
-
-        salvarStorage();
+async function excluirQuarto(id) {
+    if (confirm("Deseja excluir este quarto?")) {
+        const res = await fetch(`${API}/reservas/listar`);
+        const reservas = await res.json();
+ 
+        const reservasDoQuarto = reservas.filter(r => r.quartosId === id);
+ 
+        for (const r of reservasDoQuarto) {
+            await fetch(`${API}/reservas/excluir/${r.id}`, { method: "DELETE" });
+        }
+ 
+        await fetch(`${API}/quartos/excluir/${id}`, { method: "DELETE" });
         listarQuartos();
     }
 }
 
-function verReservas(id) {
-    localStorage.setItem("quartoAtual", id);
+function verReservas(id, numero) {
+    sessionStorage.setItem("quartoAtual", id);
+    sessionStorage.setItem("quartoNumero", numero);
     window.location = "reservas.html";
 }
 
-
 function abrirModalReserva() {
-    document.getElementById(
-        "modalReserva"
-    ).style.display = "flex";
+    document.getElementById("modalReserva").style.display = "flex";
 }
 
 function fecharModalReserva() {
-    document.getElementById(
-        "modalReserva"
-    ).style.display = "none";
+    document.getElementById("modalReserva").style.display = "none";
 }
 
-function salvarReserva() {
-    const quartoId =
-        Number(localStorage.getItem("quartoAtual"));
+async function salvarReserva() {
+    const quartosId = Number(sessionStorage.getItem("quartoAtual"));
 
-    reservas.push({
-        id: 
-            Date.now(), quartoId,
-        hospede:
-            document.getElementById("hospede").value,
-        entrada:
-            document.getElementById("entrada").value,
-        saida:
-            document.getElementById("saida").value
+    await fetch(`${API}/reservas/cadastrar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            hospede: document.getElementById("hospede").value,
+            data_entrada: new Date(document.getElementById("entrada").value).toISOString(),
+            data_saida: new Date(document.getElementById("saida").value).toISOString(),
+            quartosId
+        })
     });
 
-    salvarStorage();
-    listarReservas();
     fecharModalReserva();
+    listarReservas();
 }
 
-function listarReservas() {
-
-    const tabela =
-        document.getElementById("listaReservas");
-
+async function listarReservas() {
+    const tabela = document.getElementById("listaReservas");
     if (!tabela) return;
 
-    const quartoId =
-        Number(localStorage.getItem("quartoAtual"));
+    const quartoId = Number(sessionStorage.getItem("quartoAtual"));
+    const quartoNumero = sessionStorage.getItem("quartoNumero");
+
+    const res = await fetch(`${API}/reservas/listar`);
+    const reservas = await res.json();
 
     tabela.innerHTML = "";
 
     reservas
-    .filter(r => r.quartoId === quartoId)
-    .forEach(r => {
+        .filter(r => r.quartosId === quartoId)
+        .forEach(r => {
+            const entrada = new Date(r.data_entrada).toLocaleDateString("pt-BR");
+            const saida = new Date(r.data_saida).toLocaleDateString("pt-BR");
 
-        tabela.innerHTML += `
-        <tr>
+            tabela.innerHTML += `
+            <tr>
+                <td>${r.id}</td>
+                <td>${r.hospede}</td>
+                <td>${entrada}</td>
+                <td>${saida}</td>
+                <td>
+                    <button class="danger" onclick="excluirReserva(${r.id})">Excluir</button>
+                </td>
+            </tr>`;
+        });
 
-            <td>${r.id}</td>
-            <td>${r.hospede}</td>
-            <td>${r.entrada}</td>
-            <td>${r.saida}</td>
-
-            <td>
-                <button
-                class="danger"
-                onclick="excluirReserva(${r.id})">
-
-                Excluir
-                </button>
-            </td>
-        </tr>
-        `;
-    });
-
-    const quarto = quartos.find(q => q.id === quartoId);
-
-    document.getElementById(
-        "tituloQuarto"
-    ).innerText =
-        `Reservas do Quarto ${quarto.numero}`;
+    const titulo = document.getElementById("tituloQuarto");
+    if (titulo) titulo.innerText = `Reservas do Quarto ${quartoNumero}`;
 }
 
-function excluirReserva(id) {
-    if(confirm("Deseja excluir esta reserva?")) {
-        reservas =
-            reservas.filter(r => r.id !== id);
-
-        salvarStorage();
+async function excluirReserva(id) {
+    if (confirm("Deseja excluir esta reserva?")) {
+        await fetch(`${API}/reservas/excluir/${id}`, { method: "DELETE" });
         listarReservas();
     }
 }
