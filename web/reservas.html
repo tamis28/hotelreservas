@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Reservas</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <aside class="sidebar">
+        <br>
+        <h2>Hotel Tami</h2>
+        <p>Reservas</p>
+        <hr>
+
+        <br>
+        <br>
+
+        <button class="menu" onclick="window.location='index.html'">
+            Quartos
+        </button>
+
+        <button class="menu active">
+            Reservas
+        </button>
+
+    </aside>
+
+    <main>
+
+        <br><br>
+        <h1 id="tituloQuarto"></h1>
+        <br><br>
+
+        <button onclick="abrirModalReserva()">
+            Nova Reserva
+        </button>
+
+        <br>
+        <br>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Hóspede</th>
+                    <th>Entrada</th>
+                    <th>Saída</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+
+            <tbody id="listaReservas"></tbody>
+
+        </table>
+
+    </main>
+
+</div>
+
+<div class="modal" id="modalReserva">
+
+    <div class="modal-content">
+
+        <h2>Nova Reserva</h2>
+
+        <input id="hospede" placeholder="Nome do hóspede">
+
+        <input type="date" id="entrada">
+
+        <input type="date" id="saida">
+
+        <button onclick="salvarReserva()">
+            Salvar
+        </button>
+
+        <button onclick="fecharModalReserva()">
+            Cancelar
+        </button>
+
+    </div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
